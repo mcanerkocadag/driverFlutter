@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_firebase/feature/home/sub_view/home_search_delegate.dart';
+import 'package:flutter_application_firebase/feature/home_create/home_create_view.dart';
 import 'package:flutter_application_firebase/product/constants/color_constants.dart';
 import 'package:flutter_application_firebase/product/constants/string_constants.dart';
+import 'package:flutter_application_firebase/product/models/tag.dart';
 import 'package:flutter_application_firebase/product/widget/home_news_card.dart';
 import 'package:flutter_application_firebase/product/widget/sub_title_text.dart';
 import 'package:flutter_application_firebase/product/widget/title_text.dart';
@@ -23,28 +26,65 @@ class HomeView extends ConsumerStatefulWidget {
 }
 
 class _HomeViewState extends ConsumerState<HomeView> {
+  final TextEditingController _controller = TextEditingController();
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _controller.dispose();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    ref.read(homeProvider.notifier).fetchAndLoad();
+    Future.microtask(() {
+      ref.read(homeProvider.notifier).fetchAndLoad();
+    });
+
+    ref.read(homeProvider.notifier).addListener((state) {
+      if (state.selectedTag != null) {
+        _controller.text = state.selectedTag?.name ?? '';
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () async {
+          var response = await context.navigateToPage<bool>(HomeCreateView(),
+              type: SlideType.RIGHT);
+          if (response ?? false) {
+            ref.read(homeProvider.notifier).fetchAndLoad();
+          }
+        },
+      ),
       body: SafeArea(
         child: Material(
-          child: ListView(
-            padding: context.paddingNormal,
-            children: const [
-              _Header(),
-              _CustomTextField(),
-              _TagListView(),
-              _BrowseHorizontalListView(),
-              _RecommendedHeader(),
-              _RecommendedListView(),
-              // HomeListView()
+          child: Stack(
+            children: [
+              ListView(
+                padding: context.paddingNormal,
+                children: [
+                  _Header(),
+                  _CustomTextField(
+                    controller: _controller,
+                  ),
+                  _TagListView(),
+                  _BrowseHorizontalListView(),
+                  _RecommendedHeader(),
+                  _RecommendedListView(),
+                  _BottomText()
+                  // HomeListView()
+                ],
+              ),
+              if (ref.watch(homeProvider).isLoading ?? false)
+                const Center(
+                  child: CircularProgressIndicator(),
+                )
             ],
           ),
         ),
@@ -53,17 +93,45 @@ class _HomeViewState extends ConsumerState<HomeView> {
   }
 }
 
-class _CustomTextField extends StatelessWidget {
-  const _CustomTextField({
+class _BottomText extends StatelessWidget {
+  const _BottomText({
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Column(
+      children: [
+        Text(
+          "data",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomTextField extends ConsumerWidget {
+  const _CustomTextField({
+    required this.controller,
+  });
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
       padding: EdgeInsets.all(8),
       child: TextField(
-        decoration: InputDecoration(
+        controller: controller,
+        onTap: () async {
+          final result = await showSearch(
+              context: context,
+              delegate: HomeSearchDelegate(
+                ref.read(homeProvider.notifier).fullTagList,
+              ));
+          ref.read(homeProvider.notifier).updateSelectedTag(result);
+        },
+        decoration: const InputDecoration(
             prefixIcon: Icon(Icons.search_outlined),
             suffixIcon: Icon(Icons.mic_outlined),
             border: OutlineInputBorder(
@@ -100,26 +168,24 @@ class _RecommendedHeader extends StatelessWidget {
 }
 
 //45:52 part 6 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-class _RecommendedListView extends StatelessWidget {
+class _RecommendedListView extends ConsumerWidget {
   const _RecommendedListView({
     super.key,
   });
 
-  static const dummyRecommendImageUrl =
-      "https://firebasestorage.googleapis.com/v0/b/flutterdenem.appspot.com/o/recommendbg.png?alt=media&token=c81f6902-6daf-489d-8c3d-aa718bf812c9";
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recommended = ref.watch(homeProvider).recommended;
     return ListView.builder(
-      itemCount: 5,
+      itemCount: recommended?.length ?? 0,
       shrinkWrap: true,
       physics: ClampingScrollPhysics(),
       itemBuilder: (BuildContext context, int index) {
+        final recommendedItem = recommended?[index];
         return ListTile(
-          leading: Image.network(dummyRecommendImageUrl),
-          title: Text("UI/UX Design"),
-          subtitle: Text(
-              "A Simple Trick Forcdd dddfsdfs dfsdfsdfdsfds Creating Color Palettes Quickly"),
+          leading: Image.network(recommendedItem?.image ?? ''),
+          title: Text(recommendedItem?.title ?? ''),
+          subtitle: Text(recommendedItem?.description ?? ''),
         );
         /**
         Padding(
@@ -169,6 +235,8 @@ class _BrowseHorizontalListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final newsItems = ref.watch(homeProvider).news ?? [];
+    print("data: $newsItems");
+
     return SizedBox(
       height: context.dynamicHeight(.3),
       child: ListView.builder(
@@ -182,21 +250,23 @@ class _BrowseHorizontalListView extends ConsumerWidget {
   }
 }
 
-class _TagListView extends StatelessWidget {
+class _TagListView extends ConsumerWidget {
   const _TagListView({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tagItems = ref.watch(homeProvider).tags;
     return SizedBox(
       height: context.dynamicHeight(.1),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 4,
+        itemCount: tagItems?.length ?? 0,
         itemBuilder: (BuildContext context, int index) {
-          if (index.isOdd) return _ActiveChip();
-          return _PassiveChip();
+          final tagItem = tagItems?[index];
+          if (tagItem?.active ?? false) return _ActiveChip(tagItem);
+          return _PassiveChip(tagItem);
         },
       ),
     );
