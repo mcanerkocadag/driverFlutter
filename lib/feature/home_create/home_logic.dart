@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -70,8 +71,11 @@ class HomeLogic with FirebaseUtility {
       throw Exception("Resim sorunu ");
     }
 
-    final imageString = await _pickedImage?.readAsString();
-    await imageReference.putData(selectedImage!);
+    final imageString = await _pickedImage?.readAsBytes();
+
+    String imagenConvertida = base64.encode(imageString!);
+    await imageReference.putString(imagenConvertida!,
+        format: PutStringFormat.base64);
     var downloadUrl = await imageReference.getDownloadURL();
 
     final response = await FirebaseCollections.news.referance.add(
