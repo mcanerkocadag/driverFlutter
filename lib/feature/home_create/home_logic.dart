@@ -73,6 +73,7 @@ class HomeLogic with FirebaseUtility {
 
     final imageString = await _pickedImage?.readAsBytes();
 
+//test
     String imagenConvertida = base64.encode(imageString!);
     await imageReference.putString(imagenConvertida!,
         format: PutStringFormat.base64);
