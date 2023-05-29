@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' as firebaseui;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_firebase/feature/auth/authentication_provider.dart';
+import 'package:flutter_application_firebase/feature/createProfile/create_profile.dart';
 import 'package:flutter_application_firebase/product/constants/string_constants.dart';
 import 'package:flutter_application_firebase/product/widget/sub_title_text.dart';
 import 'package:flutter_application_firebase/product/widget/title_text.dart';
@@ -49,9 +50,13 @@ class _AuthenticationViewState extends ConsumerState<AuthenticationView> {
             padding: context.paddingLow,
             child: Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  const _Header(),
+                  const Image(
+                    height: 100,
+                    width: 100,
+                    image: AssetImage('assets/images/im_appLogo.png'),
+                  ),
                   Padding(
                     padding: context.paddingNormal,
                     child: firebaseui.LoginView(
@@ -62,7 +67,13 @@ class _AuthenticationViewState extends ConsumerState<AuthenticationView> {
                   ),
                   if (ref.watch(authProvider).isRedirect)
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ProfileCreationPage()),
+                        );
+                      },
                       child: Text(
                         StringConstants.continueToApp,
                         style: context.textTheme.bodyMedium
