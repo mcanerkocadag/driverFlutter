@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'feature/auth/authentication_view.dart';
 import 'feature/home/chat/chat_screen_view.dart';
+import 'feature/matches/matches_view.dart';
 
 Future<void> main() async {
   await ApplicationStart.init();
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Material App',
-      home: MessageView(),
+      home: ProfileView(),
       theme: AppTheme(context).theme,
     );
   }

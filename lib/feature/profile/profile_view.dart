@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_application_firebase/product/enums/image_constants.dart';
 import 'package:flutter_application_firebase/product/widget/circle_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,7 +13,7 @@ class ProfileView extends ConsumerStatefulWidget {
 class _ProfileViewState extends ConsumerState<ProfileView> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
         backgroundColor: Colors.white,
         body: SingleChildScrollView(
           child: Column(
@@ -22,7 +21,7 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
               _Header(),
               Padding(
                 padding: EdgeInsets.all(40.0),
-                child: Column(
+                child:  Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _NameAndTitleWidget(),

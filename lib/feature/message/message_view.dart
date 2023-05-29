@@ -154,9 +154,9 @@ class _messageListView extends StatelessWidget {
                 fontWeight: FontWeight.w400,
               ),
             ),
-            trailing: const Column(
+            trailing:  Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: const [
                 Text(
                   "23 Min",
                   style: TextStyle(
