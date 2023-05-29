@@ -5,7 +5,11 @@ enum FirebaseCollections {
   version,
   tag,
   recomended,
-  category;
+  category,
+  users,
+  userChats,
+  chats,
+  messages;
 
   CollectionReference get referance =>
       FirebaseFirestore.instance.collection(name);

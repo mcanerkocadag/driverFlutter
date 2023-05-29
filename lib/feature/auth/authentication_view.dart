@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' as firebaseui;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_firebase/feature/auth/authentication_provider.dart';
+import 'package:flutter_application_firebase/feature/home/chat/chat_screen_view.dart';
+import 'package:flutter_application_firebase/feature/home/chat/chat_view.dart';
 import 'package:flutter_application_firebase/product/constants/string_constants.dart';
 import 'package:flutter_application_firebase/product/widget/sub_title_text.dart';
 import 'package:flutter_application_firebase/product/widget/title_text.dart';
@@ -62,7 +64,9 @@ class _AuthenticationViewState extends ConsumerState<AuthenticationView> {
                   ),
                   if (ref.watch(authProvider).isRedirect)
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        context.navigateToPage(ChatPage());
+                      },
                       child: Text(
                         StringConstants.continueToApp,
                         style: context.textTheme.bodyMedium
