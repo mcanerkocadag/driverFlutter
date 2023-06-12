@@ -1,13 +1,17 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_firebase/feature/match/match_page.dart';
 import 'package:flutter_application_firebase/product/constants/color_constants.dart';
 import 'package:http/http.dart' as http;
+import '../../product/models/userprofile.dart';
 
 class MovieSearchPage extends StatefulWidget {
-  const MovieSearchPage({Key? key}) : super(key: key);
+  final UserProfile user;
+  MovieSearchPage({required this.user});
 
   @override
   _MovieSearchPageState createState() => _MovieSearchPageState();
@@ -19,16 +23,8 @@ class _MovieSearchPageState extends State<MovieSearchPage> {
 
   Set<int> _selectedItemIndexes =
       Set<int>(); // Seçili öğelerin indekslerini tutan küme
+  List<MovieDetail> movieList = [];
 
-  // Örnek liste verisi
-  List<String> _listData = [
-    'Liste Öğesi 1',
-    'Liste Öğesi 2',
-    'Liste Öğesi 3',
-    'Liste Öğesi 4',
-    'Liste Öğesi 5',
-    'Liste Öğesi 6',
-  ];
   Future<void> _searchMovies(String keyword) async {
     final apiUrl =
         'https://api.themoviedb.org/3/search/movie?api_key=137ab39a2a751ee4c1b61e7bcead4cad&query=$keyword&sort_by=popularity.desc';
@@ -88,15 +84,24 @@ class _MovieSearchPageState extends State<MovieSearchPage> {
                 ),
                 itemCount: _movies.length,
                 itemBuilder: (context, index) {
-                  bool isSelected = _selectedItemIndexes.contains(index);
+                  var movie = _movies.elementAt(index);
 
+                  //bool isSelected = movieList.contains(index);
+                  bool isSelected =
+                      movieList.any((element) => element.id == movie.id);
                   return GestureDetector(
                     onTap: () {
                       setState(() {
                         if (isSelected) {
                           _selectedItemIndexes.remove(index);
+                          movieList
+                              .removeWhere((element) => element.id == movie.id);
                         } else {
                           _selectedItemIndexes.add(index);
+                          movieList.add(MovieDetail(
+                              name: movie.originalTitle ?? '',
+                              type: movie.title ?? '',
+                              id: movie.id ?? 0));
                         }
                       });
                     },
@@ -151,7 +156,14 @@ class _MovieSearchPageState extends State<MovieSearchPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       )),
-                  onPressed: () {},
+                  onPressed: () {
+                    widget.user.movieList = movieList;
+                    _saveUserData(widget.user);
+                    /*Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MatchPage()),
+                    );*/
+                  },
                   child: Text('Continue'),
                 ),
               ),
@@ -160,6 +172,30 @@ class _MovieSearchPageState extends State<MovieSearchPage> {
         ),
       ),
     );
+  }
+}
+
+void _saveUserData(UserProfile userProfile) async {
+  try {
+    CollectionReference usersCollection =
+        FirebaseFirestore.instance.collection('users');
+
+    await usersCollection.add({
+      'userName': userProfile.userName,
+      'surname': userProfile.surname,
+      'gender': userProfile.gender,
+      'movieList': userProfile.movieList
+          .map((movie) => {
+                'name': movie.name,
+                'type': movie.type,
+                'id': movie.id,
+              })
+          .toList(),
+    });
+
+    print('Veri başarıyla kaydedildi.');
+  } catch (e) {
+    print('Veri kaydedilirken bir hata oluştu: $e');
   }
 }
 

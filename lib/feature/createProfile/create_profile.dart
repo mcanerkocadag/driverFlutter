@@ -5,6 +5,9 @@ import 'package:flutter_application_firebase/feature/choosePhotos/choose_photos.
 import 'package:flutter_application_firebase/product/constants/color_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../product/models/userprofile.dart';
+
+final userProvider = Provider<UserProfile>((ref) => throw UnimplementedError());
 
 class ProfileCreationPage extends StatefulWidget {
   @override
@@ -17,9 +20,6 @@ class _ProfileCreationPageState extends State<ProfileCreationPage> {
   bool isMaleSelected = false;
   bool isFemaleSelected = false;
   File? _imageFile;
-  final userProvider =
-      Provider<UserProfile>((ref) => throw UnimplementedError());
-  final container = ProviderContainer();
 
   Future<void> _pickImage() async {
     final pickedFile =
@@ -174,15 +174,18 @@ class _ProfileCreationPageState extends State<ProfileCreationPage> {
                           borderRadius: BorderRadius.circular(8.0),
                         )),
                     onPressed: () {
-                      var user = UserProfile(
-                          profilePhoto: "sd",
-                          firstName: "Akif",
-                          lastName: "demirezen");
+                      final newUser = UserProfile(
+                          userName: _firstNameController.text,
+                          surname: _surnameController.text,
+                          profilePhotoUrl: AssetImage(_imageFile?.path ?? ''),
+                          gender: isMaleSelected ? 'M' : 'F',
+                          imageList: [],
+                          movieList: []);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => ChoosePhotosView(
-                                  user: user,
+                                  user: newUser,
                                 )),
                       );
                     },
@@ -196,15 +199,4 @@ class _ProfileCreationPageState extends State<ProfileCreationPage> {
       ),
     );
   }
-}
-
-class UserProfile {
-  final String profilePhoto;
-  final String firstName;
-  final String lastName;
-
-  UserProfile(
-      {required this.profilePhoto,
-      required this.firstName,
-      required this.lastName});
 }

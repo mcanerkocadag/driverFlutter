@@ -1,23 +1,14 @@
 import 'dart:io';
 
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_firebase/feature/createProfile/create_profile.dart';
 import 'package:flutter_application_firebase/feature/moviePages/movie_pages.dart';
 import 'package:flutter_application_firebase/product/constants/color_constants.dart';
+import 'package:flutter_application_firebase/product/utility/firebase/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: null,
-    );
-  }
-}
+import '../../product/models/userprofile.dart';
 
 class ChoosePhotosView extends StatefulWidget {
   final UserProfile user;
@@ -105,10 +96,22 @@ class _ChoosePhotosViewState extends State<ChoosePhotosView> {
                                 borderRadius: BorderRadius.circular(8.0),
                               )),
                           onPressed: () {
+                            /*_uploadImagesToFirebaseStorage(
+                                    '3423532545', _images)
+                                .then((imageUrls) {
+                              print('Yüklenen Resim URL\'leri: $imageUrls');
+                            }).catchError((error) {
+                              print('Resim yükleme hata: $error');
+                            });*/
+                            _images.forEach((element) {
+                              widget.user.imageList
+                                  .add(AssetImage(element.path ?? ''));
+                            });
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => MovieSearchPage()),
+                                  builder: (context) =>
+                                      MovieSearchPage(user: widget.user)),
                             );
                           },
                           child: Text('Continue'),
@@ -129,4 +132,36 @@ class _ChoosePhotosViewState extends State<ChoosePhotosView> {
       ),
     );
   }
+}
+
+Future<List<String>> _uploadImagesToFirebaseStorage(
+    String uid, List<File> images) async {
+  List<String> imageUrls = [];
+
+  for (int i = 0; i < images.length; i++) {
+    File image = images[i];
+
+    try {
+      // Resmi yüklemek için bir referans alın
+      String fileName =
+          DateTime.now().millisecondsSinceEpoch.toString() + "_$i";
+      Reference reference =
+          FirebaseStorage.instance.ref().child('users/$uid/$fileName');
+
+      // Resmi yükleyin
+      UploadTask uploadTask = reference.putFile(image);
+      TaskSnapshot storageTaskSnapshot =
+          await uploadTask.whenComplete(() => null);
+
+      // Yükleme tamamlandığında resmin URL'sini alın
+      String imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
+
+      // Resim URL'sini listeye ekle
+      imageUrls.add(imageUrl);
+    } catch (e) {
+      print('Resim yükleme hatası: $e');
+    }
+  }
+
+  return imageUrls;
 }
